@@ -62,8 +62,7 @@ defmodule Ueberauth.Strategy.WorkOS do
   If you use an email address to determine the connection selector, then it is advisable to use the
   same email address as the `login_hint`.
   """
-  use Ueberauth.Strategy,
-    ignores_csrf_attack: true
+  use Ueberauth.Strategy, ignores_csrf_attack: true
 
   alias Ueberauth.Auth.Credentials
   alias Ueberauth.Auth.Extra
@@ -82,7 +81,13 @@ defmodule Ueberauth.Strategy.WorkOS do
       |> with_connection_selector(conn)
       |> with_param(:domain_hint, conn)
       |> with_param(:login_hint, conn)
-      |> with_state_param(conn)
+
+    # Add the state param from the conn params if one exists.
+    # This lets callers use the state param to pass additional information to the callback.
+    params =
+      if value = conn.params[to_string(:state)],
+        do: Keyword.put(params, :state, value),
+        else: with_state_param(params, conn)
 
     opts = oauth_client_options_from_conn(conn)
     redirect!(conn, OAuth.authorize_url!(params, opts))

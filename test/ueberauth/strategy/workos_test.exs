@@ -94,6 +94,15 @@ defmodule Ueberauth.Strategy.WorkOSTest do
 
     # State
 
+    test "allows a custom state parameter", %{conn: conn} do
+      # I want a state param on the request to override the private state param
+      conn = put_param(conn, "state", "custom_state")
+      conn = WorkOS.handle_request!(conn)
+      assert {302, headers, _body} = sent_resp(conn)
+      assert %{"location" => sign_in_page} = Enum.into(headers, %{})
+      assert sign_in_page =~ "state=custom_state"
+    end
+
     test "sets state cookie", %{conn: conn} do
       conn = WorkOS.handle_request!(conn)
       assert {_status, headers, _body} = sent_resp(conn)
